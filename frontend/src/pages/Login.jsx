@@ -1,69 +1,96 @@
-import React, { useState } from 'react'
-import { FaSignInAlt } from 'react-icons/fa'
-import { toast } from 'react-toastify'
+import React, { useState, useEffect } from 'react';
+import { FaSignInAlt } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import Spinner from '../components/Spinner';
+import { login, reset } from '../features/authSlice';
 
 const Login = () => {
-	const [formData, setFormData] = useState({
-		email: '',
-		password: '',
-	})
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isError, isLoading, isSuccess, message, user } = useSelector(
+    (state) => state.auth
+  );
 
-	const { email, password } = formData
+  const { email, password } = formData;
 
-	const onChange = (e) => {
-		setFormData((prevState) => {
-			const { value, name } = e.target
-			return { ...prevState, [name]: value }
-		})
-		console.log(formData)
-	}
+  const onChange = (e) => {
+    setFormData((prevState) => {
+      const { value, name } = e.target;
+      return { ...prevState, [name]: value };
+    });
+  };
 
-	const onSubmit = (e) => {
-		e.preventDefault()
-	}
+  useEffect(() => {
+    if (isError) {
+      toast.error(message);
+    }
+    if (isSuccess && user) {
+      navigate('/');
+    }
+    dispatch(reset());
+  }, [user, dispatch, isError, isSuccess, navigate, message]);
 
-	return (
-		<>
-			<section className='heading'>
-				<h1>
-					<FaSignInAlt /> Login
-				</h1>
-				<p>Please log in to get support</p>
-				<section className='form'>
-					<form onSubmit={onSubmit}>
-						<div className='form-group'>
-							<input
-								type='email'
-								className='form-control'
-								id='email'
-								name='email'
-								value={email}
-								onChange={onChange}
-								placeholder='Enter your email'
-								required
-							/>
-						</div>
-						<div className='form-group'>
-							<input
-								type='password'
-								className='form-control'
-								id='password'
-								name='password'
-								value={password}
-								onChange={onChange}
-								placeholder='Enter password'
-								required
-							/>
-						</div>
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const userData = {
+      email,
+      password,
+    };
+    dispatch(login(userData));
+  };
 
-						<div className='form-group'>
-							<button className='btn btn-block'>Submit</button>
-						</div>
-					</form>
-				</section>
-			</section>
-		</>
-	)
-}
+  if (isLoading) {
+    return <Spinner />;
+  }
 
-export default Login
+  return (
+    <>
+      <section className="heading">
+        <h1>
+          <FaSignInAlt /> Login
+        </h1>
+        <p>Please log in to get support</p>
+        <section className="form">
+          <form onSubmit={onSubmit}>
+            <div className="form-group">
+              <input
+                type="email"
+                className="form-control"
+                id="email"
+                name="email"
+                value={email}
+                onChange={onChange}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="password"
+                className="form-control"
+                id="password"
+                name="password"
+                value={password}
+                onChange={onChange}
+                placeholder="Enter password"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <button className="btn btn-block">Submit</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </>
+  );
+};
+
+export default Login;
